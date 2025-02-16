@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>网址导航 - 你的网络导航助手</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌏</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: #fff;
+            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            border-color: #4CAF50;
+        }
+
+        .category-section {
+            margin: 30px 0;
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .category-title {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .site-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .site-card {
+            background: #fff;
+            padding: 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            transition: transform 0.2s;
+            border: 1px solid #eee;
+            display: flex;
+            align-items: center;
+        }
+
+        .site-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .site-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .site-desc {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .site-logo {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .site-logo h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .site-logo p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .site-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 10px;
+            object-fit: contain;
+        }
+
+        .site-icon.loading {
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.4; }
+            100% { opacity: 1; }
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            margin-top: 40px;
+        }
+
+        /* 夜间模式样式 */
+        body.dark-mode {
+            background-color: #1a1a1a;
+            color: #fff;
+        }
+
+        body.dark-mode header,
+        body.dark-mode .category-section,
+        body.dark-mode .site-card {
+            background-color: #2d2d2d;
+            border-color: #3d3d3d;
+        }
+
+        body.dark-mode .site-card {
+            color: #fff;
+        }
+
+        body.dark-mode .site-desc {
+            color: #aaa;
+        }
+
+        body.dark-mode .search-box input {
+            background-color: #2d2d2d;
+            border-color: #3d3d3d;
+            color: #fff;
+        }
+
+        /* 主题切换按钮 */
+        .theme-toggle {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            z-index: 1000;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background-color 0.3s;
+        }
+
+        .theme-toggle:hover {
+            background-color: rgba(0,0,0,0.1);
+        }
+
+        body.dark-mode .theme-toggle:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        /* 返回顶部按钮 */
+        .back-to-top {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            background-color: #4CAF50;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        .back-to-top:hover {
+            transform: translateY(-3px);
+        }
+
+        /* 搜索结果高亮 */
+        .highlight {
+            background-color: yellow;
+            color: black;
+        }
+
+        body.dark-mode .highlight {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        /* 分类筛选器样式 */
+        .category-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 20px 0;
+            padding: 15px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #4CAF50;
+            border-radius: 20px;
+            background: none;
+            color: #4CAF50;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-btn.active {
+            background: #4CAF50;
+            color: white;
+        }
+
+        /* 收藏按钮样式 */
+        .favorite-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .site-card {
+            position: relative;
+        }
+
+        .site-card:hover .favorite-btn {
+            opacity: 1;
+        }
+
+        .favorite-btn.active {
+            color: #FFD700;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .site-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .category-filter {
+                padding: 10px;
+            }
+
+            .filter-btn {
+                padding: 6px 12px;
+                font-size: 14px;
+            }
+
+            .favorite-btn {
+                opacity: 1;
+                top: 50%;
+                transform: translateY(-50%);
+            }
+
+            .site-logo h1 {
+                font-size: 24px;
+            }
+
+            .site-logo p {
+                font-size: 14px;
+            }
+
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                font-size: 20px;
+            }
+        }
+
+        /* 收藏分类样式 */
+        .category-section.favorites {
+            border: 2px solid #FFD700;
+        }
+
+        .category-section.favorites .category-title {
+            color: #FFD700;
+            border-bottom-color: #FFD700;
+        }
+
+        /* 空状态提示 */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+            display: none;
+        }
+
+        .empty-state.show {
+            display: block;
+        }
+
+        /* 访问统计样式 */
+        .visit-count {
+            position: absolute;
+            bottom: 5px;
+            right: 10px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .site-card:hover .visit-count {
+            color: #4CAF50;
+        }
+
+        body.dark-mode .visit-count {
+            color: #666;
+        }
+
+        body.dark-mode .site-card:hover .visit-count {
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" title="切换主题">🌓</button>
+    <div class="back-to-top" title="返回顶部">↑</div>
+
+    <header>
+        <div class="container">
+            <div class="site-logo">
+                <h1>网址导航</h1>
+                <p>发现优质网站，提升上网效率</p>
+            </div>
+            <div class="search-box">
+                <input type="text" placeholder="搜索网站...">
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="category-filter">
+            <button class="filter-btn active" data-category="all">全部</button>
+            <button class="filter-btn" data-category="ai">AI工具</button>
+            <button class="filter-btn" data-category="dev">开发工具</button>
+            <button class="filter-btn" data-category="learn">学习资源</button>
+            <button class="filter-btn" data-category="design">设计资源</button>
+            <button class="filter-btn" data-category="life">生活服务</button>
+            <button class="filter-btn" data-category="media">影音娱乐</button>
+            <button class="filter-btn" data-category="tools">实用工具</button>
+            <button class="filter-btn" data-category="favorites">我的收藏</button>
+        </div>
+
+        <div class="empty-state">
+            <p>暂无内容</p>
+        </div>
+
+        <section class="category-section">
+            <h2 class="category-title">AI工具</h2>
+            <div class="site-grid">
+                <a href="https://chat.openai.com" class="site-card">
+                    <img src="https://chat.openai.com/favicon.ico" alt="ChatGPT" class="site-icon">
+                    <div>
+                        <div class="site-name">ChatGPT</div>
+                        <div class="site-desc">OpenAI开发的AI对话助手</div>
+                    </div>
+                </a>
+                <a href="https://www.midjourney.com" class="site-card">
+                    <img src="https://www.midjourney.com/favicon.ico" alt="Midjourney" class="site-icon">
+                    <div>
+                        <div class="site-name">Midjourney</div>
+                        <div class="site-desc">AI图像生成工具</div>
+                    </div>
+                </a>
+                <a href="https://claude.ai" class="site-card">
+                    <img src="https://claude.ai/favicon.ico" alt="Claude" class="site-icon">
+                    <div>
+                        <div class="site-name">Claude</div>
+                        <div class="site-desc">Anthropic开发的AI助手</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="category-section">
+            <h2 class="category-title">开发工具</h2>
+            <div class="site-grid">
+                <a href="https://github.com" class="site-card">
+                    <img src="https://github.com/favicon.ico" alt="GitHub" class="site-icon">
+                    <div>
+                        <div class="site-name">GitHub</div>
+                        <div class="site-desc">代码托管平台</div>
+                    </div>
+                </a>
+                <a href="https://code.visualstudio.com" class="site-card">
+                    <img src="https://code.visualstudio.com/favicon.ico" alt="VS Code" class="site-icon">
+                    <div>
+                        <div class="site-name">VS Code</div>
+                        <div class="site-desc">强大的代码编辑器</div>
+                    </div>
+                </a>
+                <a href="https://stackoverflow.com" class="site-card">
+                    <img src="https://stackoverflow.com/favicon.ico" alt="Stack Overflow" class="site-icon">
+                    <div>
+                        <div class="site-name">Stack Overflow</div>
+                        <div class="site-desc">程序员问答社区</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="category-section">
+            <h2 class="category-title">学习资源</h2>
+            <div class="site-grid">
+                <a href="https://www.bilibili.com" class="site-card">
+                    <img src="https://www.bilibili.com/favicon.ico" alt="哔哩哔哩" class="site-icon">
+                    <div>
+                        <div class="site-name">哔哩哔哩</div>
+                        <div class="site-desc">视频学习平台</div>
+                    </div>
+                </a>
+                <a href="https://www.coursera.org" class="site-card">
+                    <img src="https://www.coursera.org/favicon.ico" alt="Coursera" class="site-icon">
+                    <div>
+                        <div class="site-name">Coursera</div>
+                        <div class="site-desc">全球知名在线教育平台</div>
+                    </div>
+                </a>
+                <a href="https://www.udemy.com" class="site-card">
+                    <img src="https://www.udemy.com/favicon.ico" alt="Udemy" class="site-icon">
+                    <div>
+                        <div class="site-name">Udemy</div>
+                        <div class="site-desc">实用技能学习平台</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="category-section">
+            <h2 class="category-title">设计资源</h2>
+            <div class="site-grid">
+                <a href="https://www.figma.com" class="site-card">
+                    <img src="https://www.figma.com/favicon.ico" alt="Figma" class="site-icon">
+                    <div>
+                        <div class="site-name">Figma</div>
+                        <div class="site-desc">专业的在线设计工具</div>
+                    </div>
+                </a>
+                <a href="https://dribbble.com" class="site-card">
+                    <img src="https://dribbble.com/favicon.ico" alt="Dribbble" class="site-icon">
+                    <div>
+                        <div class="site-name">Dribbble</div>
+                        <div class="site-desc">设计师作品分享平台</div>
+                    </div>
+                </a>
+                <a href="https://www.behance.net" class="site-card">
+                    <img src="https://www.behance.net/favicon.ico" alt="Behance" class="site-icon">
+                    <div>
+                        <div class="site-name">Behance</div>
+                        <div class="site-desc">创意设计展示平台</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="category-section">
+            <h2 class="category-title">生活服务</h2>
+            <div class="site-grid">
+                <a href="https://www.douban.com" class="site-card">
+                    <img src="https://www.douban.com/favicon.ico" alt="豆瓣" class="site-icon">
+                    <div>
+                        <div class="site-name">豆瓣</div>
+                        <div class="site-desc">图书影音评论平台</div>
+                    </div>
+                </a>
+                <a href="https://www.xiaohongshu.com" class="site-card">
+                    <img src="https://www.xiaohongshu.com/favicon.ico" alt="小红书" class="site-icon">
+                    <div>
+                        <div class="site-name">小红书</div>
+                        <div class="site-desc">生活方式分享社区</div>
+                    </div>
+                </a>
+                <a href="https://www.zhihu.com" class="site-card">
+                    <img src="https://www.zhihu.com/favicon.ico" alt="知乎" class="site-icon">
+                    <div>
+                        <div class="site-name">知乎</div>
+                        <div class="site-desc">知识问答社区</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="category-section" data-category="media">
+            <h2 class="category-title">影音娱乐</h2>
+            <div class="site-grid">
+                <a href="https://www.netflix.com" class="site-card">
+                    <img src="https://www.netflix.com/favicon.ico" alt="Netflix" class="site-icon">
+                    <div>
+                        <div class="site-name">Netflix</div>
+                        <div class="site-desc">全球流媒体平台</div>
+                    </div>
+                </a>
+                <a href="https://www.youtube.com" class="site-card">
+                    <img src="https://www.youtube.com/favicon.ico" alt="YouTube" class="site-icon">
+                    <div>
+                        <div class="site-name">YouTube</div>
+                        <div class="site-desc">视频分享平台</div>
+                    </div>
+                </a>
+                <a href="https://music.163.com" class="site-card">
+                    <img src="https://music.163.com/favicon.ico" alt="网易云音乐" class="site-icon">
+                    <div>
+                        <div class="site-name">网易云音乐</div>
+                        <div class="site-desc">音乐流媒体平台</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section class="category-section" data-category="tools">
+            <h2 class="category-title">实用工具</h2>
+            <div class="site-grid">
+                <a href="https://www.notion.so" class="site-card">
+                    <img src="https://www.notion.so/favicon.ico" alt="Notion" class="site-icon">
+                    <div>
+                        <div class="site-name">Notion</div>
+                        <div class="site-desc">全能笔记工具</div>
+                    </div>
+                </a>
+                <a href="https://translate.google.com" class="site-card">
+                    <img src="https://translate.google.com/favicon.ico" alt="Google翻译" class="site-icon">
+                    <div>
+                        <div class="site-name">Google翻译</div>
+                        <div class="site-desc">在线翻译工具</div>
+                    </div>
+                </a>
+                <a href="https://www.wolframalpha.com" class="site-card">
+                    <img src="https://www.wolframalpha.com/favicon.ico" alt="Wolfram Alpha" class="site-icon">
+                    <div>
+                        <div class="site-name">Wolfram Alpha</div>
+                        <div class="site-desc">智能知识计算引擎</div>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2024 网址导航 - 聚合优质网站</p>
+        </div>
+    </footer>
+
+    <script>
+        // 主题切换
+        const themeToggle = document.querySelector('.theme-toggle');
+        const body = document.body;
+        
+        // 从localStorage加载主题设置
+        if (localStorage.getItem('dark-mode') === 'true') {
+            body.classList.add('dark-mode');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode');
+            localStorage.setItem('dark-mode', body.classList.contains('dark-mode'));
+        });
+
+        // 搜索功能
+        const searchInput = document.querySelector('.search-box input');
+        const siteCards = document.querySelectorAll('.site-card');
+
+        searchInput.addEventListener('input', (e) => {
+            const searchText = e.target.value.toLowerCase();
+            
+            siteCards.forEach(card => {
+                const siteName = card.querySelector('.site-name').textContent.toLowerCase();
+                const siteDesc = card.querySelector('.site-desc').textContent.toLowerCase();
+                
+                if (siteName.includes(searchText) || siteDesc.includes(searchText)) {
+                    card.style.display = 'flex';
+                    // 高亮匹配文本
+                    if (searchText) {
+                        highlightText(card, searchText);
+                    } else {
+                        removeHighlight(card);
+                    }
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+
+        // 文本高亮函数
+        function highlightText(element, searchText) {
+            const name = element.querySelector('.site-name');
+            const desc = element.querySelector('.site-desc');
+            
+            name.innerHTML = name.textContent.replace(
+                new RegExp(searchText, 'gi'),
+                match => `<span class="highlight">${match}</span>`
+            );
+            
+            desc.innerHTML = desc.textContent.replace(
+                new RegExp(searchText, 'gi'),
+                match => `<span class="highlight">${match}</span>`
+            );
+        }
+
+        function removeHighlight(element) {
+            const name = element.querySelector('.site-name');
+            const desc = element.querySelector('.site-desc');
+            
+            name.innerHTML = name.textContent;
+            desc.innerHTML = desc.textContent;
+        }
+
+        // 返回顶部按钮
+        const backToTop = document.querySelector('.back-to-top');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTop.style.display = 'flex';
+            } else {
+                backToTop.style.display = 'none';
+            }
+        });
+
+        backToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // 图标加载优化
+        document.querySelectorAll('.site-icon').forEach(img => {
+            img.classList.add('loading');
+            
+            img.addEventListener('load', () => {
+                img.classList.remove('loading');
+            });
+
+            img.addEventListener('error', () => {
+                img.src = 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🌐</text></svg>';
+                img.classList.remove('loading');
+            });
+        });
+
+        // 分类筛选功能
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const categories = document.querySelectorAll('.category-section');
+        const emptyState = document.querySelector('.empty-state');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // 更新按钮状态
+                filterBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const category = btn.dataset.category;
+                let hasVisibleContent = false;
+
+                if (category === 'all') {
+                    categories.forEach(cat => {
+                        cat.style.display = 'block';
+                        hasVisibleContent = true;
+                    });
+                } else if (category === 'favorites') {
+                    // 显示收藏的网站
+                    showFavorites();
+                    hasVisibleContent = document.querySelectorAll('.site-card.favorite').length > 0;
+                } else {
+                    categories.forEach(cat => {
+                        if (cat.dataset.category === category) {
+                            cat.style.display = 'block';
+                            hasVisibleContent = true;
+                        } else {
+                            cat.style.display = 'none';
+                        }
+                    });
+                }
+
+                // 显示/隐藏空状态提示
+                emptyState.classList.toggle('show', !hasVisibleContent);
+            });
+        });
+
+        // 收藏功能
+        function initFavorites() {
+            const siteCards = document.querySelectorAll('.site-card');
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+
+            siteCards.forEach(card => {
+                // 添加收藏按钮
+                const favoriteBtn = document.createElement('button');
+                favoriteBtn.className = 'favorite-btn';
+                favoriteBtn.innerHTML = '⭐';
+                favoriteBtn.title = '收藏网站';
+                
+                // 设置初始状态
+                if (favorites.includes(card.href)) {
+                    card.classList.add('favorite');
+                    favoriteBtn.classList.add('active');
+                }
+
+                // 添加点击事件
+                favoriteBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    toggleFavorite(card, favoriteBtn);
+                });
+
+                card.appendChild(favoriteBtn);
+            });
+        }
+
+        function toggleFavorite(card, btn) {
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            const index = favorites.indexOf(card.href);
+
+            if (index === -1) {
+                favorites.push(card.href);
+                card.classList.add('favorite');
+                btn.classList.add('active');
+            } else {
+                favorites.splice(index, 1);
+                card.classList.remove('favorite');
+                btn.classList.remove('active');
+            }
+
+            localStorage.setItem('favorites', JSON.stringify(favorites));
+
+            // 如果当前在收藏页面，需要更新显示
+            const activeCategoryBtn = document.querySelector('.filter-btn.active');
+            if (activeCategoryBtn.dataset.category === 'favorites') {
+                showFavorites();
+            }
+        }
+
+        function showFavorites() {
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            const cards = document.querySelectorAll('.site-card');
+
+            cards.forEach(card => {
+                if (favorites.includes(card.href)) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // 初始化收藏功能
+        initFavorites();
+
+        // 访问统计功能
+        function initVisitCount() {
+            const visitCounts = JSON.parse(localStorage.getItem('visit-counts') || '{}');
+            
+            document.querySelectorAll('.site-card').forEach(card => {
+                const url = card.href;
+                const count = visitCounts[url] || 0;
+                
+                // 添加访问计数显示
+                const countElement = document.createElement('div');
+                countElement.className = 'visit-count';
+                countElement.textContent = `访问次数: ${count}`;
+                card.appendChild(countElement);
+                
+                // 添加点击事件
+                card.addEventListener('click', (e) => {
+                    // 不阻止默认行为，让链接正常打开
+                    visitCounts[url] = (visitCounts[url] || 0) + 1;
+                    localStorage.setItem('visit-counts', JSON.stringify(visitCounts));
+                    countElement.textContent = `访问次数: ${visitCounts[url]}`;
+                });
+            });
+        }
+
+        // 初始化访问统计
+        initVisitCount();
+
+        // 更新分类标识
+        document.querySelectorAll('.category-section').forEach(section => {
+            const title = section.querySelector('.category-title').textContent;
+            switch(title) {
+                case 'AI工具':
+                    section.dataset.category = 'ai';
+                    break;
+                case '开发工具':
+                    section.dataset.category = 'dev';
+                    break;
+                case '学习资源':
+                    section.dataset.category = 'learn';
+                    break;
+                case '设计资源':
+                    section.dataset.category = 'design';
+                    break;
+                case '生活服务':
+                    section.dataset.category = 'life';
+                    break;
+                case '影音娱乐':
+                    section.dataset.category = 'media';
+                    break;
+                case '实用工具':
+                    section.dataset.category = 'tools';
+                    break;
+            }
+        });
+    </script>
+</body>
+</html> 
